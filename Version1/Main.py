@@ -33,7 +33,7 @@ game.player.y = game.height - game.player.height - (game.height / 10)
 
 #Define a list x positions the enemies can travel down
 global enemyLanes
-enemyLanes = [(400 / 5 * 1) - game.enemy0.width / 2, (400 / 5 * 2) - game.enemy0.width / 2, (400 / 5 * 3) - game.enemy0.width / 2, (400 / 5 * 4) - game.enemy0.width / 2]
+enemyLanes = [(400 / 6 * 1) - game.enemy0.width / 2, (400 / 6 * 2) - game.enemy0.width / 2, (400 / 6 * 3) - game.enemy0.width / 2, (400 / 6 * 4) - game.enemy0.width / 2, (400 / 6 * 5) - game.enemy0.width / 2]
 
 #Define a speed variable to be applied to all enemies
 global enemySpeed
@@ -42,6 +42,10 @@ enemySpeed = 0
 #Define a score
 score = 0
 
+shieldActive = False
+shootAcitve = False
+slowActive = False
+
 #Define a function to reposition the enemies
 def resetEnemies(score):
 
@@ -49,7 +53,6 @@ def resetEnemies(score):
 	global enemyLanes
 	global enemySpeed
 	global game
-
 
 	#Make a scaling difficulty on the size of the gaps between the oncoming enemies
 	if 150 - (int(score) / 10) >= game.player.height * 1.2:
@@ -83,9 +86,14 @@ resetEnemies(score)
 #Run our game loop
 while 1:
 
+	keys = game.getKeys()
+
 	#Iterate through the four enemies and move them downwards
 	for x in range(4):
-		eval("game.enemy{}".format(x)).y += enemySpeed
+		if slowActive:
+			eval("game.enemy{}".format(x)).y += enemySpeed / 2
+		else:
+			eval("game.enemy{}".format(x)).y += enemySpeed
 
 	#If the fourth and final enemy has gone off screen
 	if game.enemy3.y >= game.height:
@@ -93,6 +101,32 @@ while 1:
 		score += 1
 		#Reset the enemies
 		resetEnemies(score)
+
+	#If the right arrow is pressed, move to the right
+	if keys[K_RIGHT]:
+		game.player.x += 5
+
+	#If the left arrow is pressed, move to the left
+	if keys[K_LEFT]:
+		game.player.x -= 5
+
+	#If the player is at the far left of the screen stop it from moving off
+	if game.player.x < 0:
+		game.player.x = 0
+
+	#If the player is it the far right of the screen stop it from moving off
+	if game.player.x > game.width - game.player.width:
+		game.player.x = game.width - game.player.width
+
+	for x in range(4):
+		if game.player.collide(eval("game.enemy{}".format(x))):
+			if not shieldActive:
+				score = 0
+				resetEnemies(score)
+				game.player.x = game.width / 2 - game.player.width / 2
+				game.player.y = game.height - game.player.height - (game.height / 10)
+			else:
+				shieldActive = False
 
 	#Update the game
 	game.update()
